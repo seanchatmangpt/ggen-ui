@@ -110,17 +110,23 @@ jobs:
       - name: Set up pinned Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: '24.8.0'
+          node-version: '24.11.1'
 
-      - name: Resolve exact dependency lock
+      - name: Resolve install graph
+        working-directory: ggen-ui
+        run: npm install --ignore-scripts
+
+      - name: Repair npm lock projection
         working-directory: ggen-ui
         run: npm install --package-lock-only --ignore-scripts
 
-      - name: Install resolved dependencies
+      - name: Install frozen resolved dependencies
         working-directory: ggen-ui
-        run: npm ci
+        run: |
+          rm -rf node_modules
+          npm ci --ignore-scripts
 
-      - name: Prepare Nuxt
+      - name: Prepare Nuxt explicitly
         working-directory: ggen-ui
         run: npm run prepare
 
@@ -166,10 +172,11 @@ jobs:
             "generated_component_catalog_sha256": sys.argv[3],
             "ggen_receipt_sha256": sys.argv[4],
             "package_lock_sha256": sys.argv[5],
-            "executed": ["ggen-sync-run-x2", "nuxt-prepare", "typecheck", "production-build", "ssr-runtime-smoke"],
+            "executed": ["ggen-sync-run-x2", "npm-frozen-install", "nuxt-prepare", "typecheck", "production-build", "ssr-runtime-smoke"],
+            "dependency_hooks": "REFUSED_BY_IGNORE_SCRIPTS",
             "live_brce_transport": False,
             "standing": "PARTIAL_ALIVE",
-            "scope": "ontology manufacture + Nuxt type/build + SSR execution; no browser interaction or external DO"
+            "scope": "ontology manufacture + frozen dependency install + Nuxt type/build + SSR execution; no browser interaction or external DO"
           }, sort_keys=True, indent=2))
           PY
           python -m json.tool "${RUNNER_TEMP}/ggen-ui-verification.json" >/dev/null
