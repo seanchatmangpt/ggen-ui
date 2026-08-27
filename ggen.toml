@@ -1,16 +1,8 @@
 [project]
 name = "ggen-ui"
-description = "Semantic dashboard consumer manufactured from ggen-marketplace."
 
 [ontology]
 source = "ontology/ggen-ui.ttl"
-base_iri = "https://ggen.io/ontology/ggen-ui#"
-
-[ontology.prefixes]
-dash = "https://ggen.io/ontology/dashboard#"
-ui = "https://ggen.io/ontology/ggen-ui#"
-prov = "http://www.w3.org/ns/prov#"
-dct = "http://purl.org/dc/terms/"
 
 [packs]
 ggen-dashboard-pack = { path = "../ggen-marketplace/packs/ggen-dashboard-pack" }
