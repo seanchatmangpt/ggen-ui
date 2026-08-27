@@ -1,0 +1,42 @@
+[project]
+name = "ggen-ui"
+version = "0.1.0"
+description = "Ontology-driven dashboard projection for the ggen ecosystem"
+
+[ontology]
+source = "ontology/ggen-ui.ttl"
+base_iri = "https://ggen.dev/ui#"
+
+[ontology.prefixes]
+ui = "https://ggen.dev/ui#"
+dcterms = "http://purl.org/dc/terms/"
+prov = "http://www.w3.org/ns/prov#"
+skos = "http://www.w3.org/2004/02/skos/core#"
+xsd = "http://www.w3.org/2001/XMLSchema#"
+
+[generation]
+output_dir = "."
+
+[[generation.rules]]
+name = "dashboard-runtime"
+query = { inline = """
+PREFIX ui: <https://ggen.dev/ui#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT ?version WHERE { ui:Dashboard dcterms:hasVersion ?version . } ORDER BY ?version
+""" }
+template = { file = "templates/runtime.mjs.tera" }
+output_file = "generated/runtime.mjs"
+skip_empty = false
+mode = "Overwrite"
+
+[[generation.rules]]
+name = "dashboard-html"
+query = { inline = """
+PREFIX ui: <https://ggen.dev/ui#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT ?title WHERE { ui:Dashboard dcterms:title ?title . } ORDER BY ?title
+""" }
+template = { file = "templates/index.html.tera" }
+output_file = "generated/index.html"
+skip_empty = false
+mode = "Overwrite"
