@@ -4,5 +4,7 @@ out/
 coverage/
 test-results/
 playwright-report/
+.ggen/
+.ggen-v2/
 *.log
 .DS_Store
