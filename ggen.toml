@@ -1,6 +1,5 @@
 [project]
 name = "ggen-ui"
-version = "26.8.27"
 description = "Semantic dashboard consumer manufactured from ggen-marketplace."
 
 [ontology]
