@@ -1,0 +1,4 @@
+[pack]
+name = "ggen-dashboard-pack"
+version = "0.1.0"
+description = "Reusable ontology-driven UI/control-plane projection for ggen lifecycle, evidence, BRCE intent manufacturing, receipts, replay, and standing. Canonical facts live in RDF; JavaScript and HTML are generated projections."
