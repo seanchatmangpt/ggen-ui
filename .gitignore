@@ -4,6 +4,8 @@ node_modules/
 .dist/
 app/generated/
 ggen.lock
+.ggen/
+.ggen-v2/
 package-lock.json
 *.log
 .DS_Store

@@ -81,13 +81,23 @@ jobs:
         working-directory: ggen-ui
         run: |
           set -euo pipefail
-          rm -rf app/generated
+          rm -rf app/generated .ggen .ggen-v2
           "$GGEN_BIN" sync run
           test -s app/generated/component-catalog.ts
           cp app/generated/component-catalog.ts "${RUNNER_TEMP}/component-catalog-a.ts"
           rm -rf app/generated
           "$GGEN_BIN" sync run
           cmp "${RUNNER_TEMP}/component-catalog-a.ts" app/generated/component-catalog.ts
+
+          # ggen's own operational receipts are expected evidence, not source mutation.
+          # Preserve only non-secret receipt material. Ephemeral signing keys never leave
+          # the runner and are destroyed before the source-cleanliness court.
+          test -s .ggen-v2/receipt.json
+          test -s .ggen-v2/receipt-log.jsonl
+          cp .ggen-v2/receipt.json "${RUNNER_TEMP}/ggen-receipt.json"
+          cp .ggen-v2/receipt-log.jsonl "${RUNNER_TEMP}/ggen-receipt-log.jsonl"
+          rm -rf .ggen .ggen-v2
+
           git diff --exit-code
           unexpected="$(git status --porcelain --untracked-files=all || true)"
           if [[ -n "$unexpected" ]]; then
@@ -95,6 +105,7 @@ jobs:
             exit 2
           fi
           sha256sum app/generated/component-catalog.ts | tee "${RUNNER_TEMP}/component-catalog.sha256"
+          sha256sum "${RUNNER_TEMP}/ggen-receipt.json" | tee "${RUNNER_TEMP}/ggen-receipt.sha256"
 
       - name: Set up pinned Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
@@ -144,15 +155,17 @@ jobs:
         run: |
           set -euo pipefail
           catalog_sha="$(awk '{print $1}' "${RUNNER_TEMP}/component-catalog.sha256")"
+          ggen_receipt_sha="$(awk '{print $1}' "${RUNNER_TEMP}/ggen-receipt.sha256")"
           lock_sha="$(sha256sum package-lock.json | awk '{print $1}')"
-          python - "$UI_SHA" "$MARKETPLACE_SHA" "$catalog_sha" "$lock_sha" > "${RUNNER_TEMP}/ggen-ui-verification.json" <<'PY'
+          python - "$UI_SHA" "$MARKETPLACE_SHA" "$catalog_sha" "$ggen_receipt_sha" "$lock_sha" > "${RUNNER_TEMP}/ggen-ui-verification.json" <<'PY'
           import json, sys
           print(json.dumps({
             "schema": "https://ggen.io/schema/ui-verification-receipt/v1",
             "subject": {"repository": "seanchatmangpt/ggen-ui", "sha": sys.argv[1]},
             "ggen_authority_source": {"repository": "seanchatmangpt/ggen-marketplace", "sha": sys.argv[2]},
             "generated_component_catalog_sha256": sys.argv[3],
-            "package_lock_sha256": sys.argv[4],
+            "ggen_receipt_sha256": sys.argv[4],
+            "package_lock_sha256": sys.argv[5],
             "executed": ["ggen-sync-run-x2", "nuxt-prepare", "typecheck", "production-build", "ssr-runtime-smoke"],
             "live_brce_transport": False,
             "standing": "PARTIAL_ALIVE",
@@ -170,6 +183,9 @@ jobs:
             ${{ runner.temp }}/admitted-config.json
             ${{ runner.temp }}/ggen-version.txt
             ${{ runner.temp }}/component-catalog.sha256
+            ${{ runner.temp }}/ggen-receipt.json
+            ${{ runner.temp }}/ggen-receipt-log.jsonl
+            ${{ runner.temp }}/ggen-receipt.sha256
             ${{ runner.temp }}/preview.log
             ${{ runner.temp }}/index.html
             ${{ runner.temp }}/ggen-ui-verification.json
