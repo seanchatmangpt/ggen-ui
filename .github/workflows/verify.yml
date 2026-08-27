@@ -14,7 +14,7 @@ concurrency:
 
 env:
   MARKETPLACE_REPO: seanchatmangpt/ggen-marketplace
-  MARKETPLACE_REF: bba99ff12533b7c8da3d5eaa7e88e8d5fe0133c6
+  MARKETPLACE_REF: ebc53dd7ce2c936c75fa87ea1f63fe2a2c321e82
 
 jobs:
   verify:
@@ -117,12 +117,14 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '24.8.0'
-          cache: npm
-          cache-dependency-path: ggen-ui/package.json
 
-      - name: Install exact direct dependencies
+      - name: Resolve dependency lock for qualification
         working-directory: ggen-ui
-        run: npm install --package-lock=false
+        run: npm install --package-lock-only --ignore-scripts
+
+      - name: Install exact resolved dependencies
+        working-directory: ggen-ui
+        run: npm ci
 
       - name: Verify generated authority contract
         working-directory: ggen-ui
@@ -151,13 +153,14 @@ jobs:
           set -euo pipefail
           contract_sha="$(sha256sum src/generated/dashboard-contract.json | awk '{print $1}')"
           projection_sha="$(sha256sum src/generated/projections.ts | awk '{print $1}')"
-          python - "$UI_SHA" "$MARKETPLACE_SHA" "$contract_sha" "$projection_sha" > "${RUNNER_TEMP}/ggen-ui-verification.json" <<'PY'
+          lock_sha="$(sha256sum package-lock.json | awk '{print $1}')"
+          python - "$UI_SHA" "$MARKETPLACE_SHA" "$contract_sha" "$projection_sha" "$lock_sha" > "${RUNNER_TEMP}/ggen-ui-verification.json" <<'PY'
           import json, sys
           print(json.dumps({
               "schema": "https://ggen.io/schema/ui-verification-receipt/v1",
               "subject": {"repository": "seanchatmangpt/ggen-ui", "sha": sys.argv[1]},
               "manufacturer": {"repository": "seanchatmangpt/ggen-marketplace", "sha": sys.argv[2], "pack": "ggen-dashboard-pack"},
-              "generated": {"dashboard_contract_sha256": sys.argv[3], "projections_sha256": sys.argv[4]},
+              "generated": {"dashboard_contract_sha256": sys.argv[3], "projections_sha256": sys.argv[4], "package_lock_sha256": sys.argv[5]},
               "executed": ["ggen-sync-run-x2", "source-verifier", "typescript", "next-production-build", "chromium", "axe"],
               "authority_ceiling": "CONSTRUCT_WITH_EXPLICIT_BRCE_TRANSPORT",
               "live_brce_transport": False,
@@ -178,6 +181,7 @@ jobs:
             ${{ runner.temp }}/generated-a.sha256
             ${{ runner.temp }}/generated-b.sha256
             ${{ runner.temp }}/ggen-ui-verification.json
+            ggen-ui/package-lock.json
             ggen-ui/test-results
           if-no-files-found: warn
           retention-days: 14
