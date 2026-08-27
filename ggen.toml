@@ -1,0 +1,8 @@
+[project]
+name = "ggen-ui"
+
+[ontology]
+source = "ontology/ggen-ui.ttl"
+
+[templates]
+dir = "templates"
