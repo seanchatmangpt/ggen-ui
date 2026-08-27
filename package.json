@@ -3,6 +3,7 @@
   "version": "26.8.27",
   "private": true,
   "type": "module",
+  "packageManager": "npm@10.9.2",
   "scripts": {
     "dev": "nuxt dev",
     "prepare": "nuxt prepare",
@@ -22,6 +23,7 @@
     "vue-tsc": "3.3.11"
   },
   "engines": {
-    "node": "^22.19.0 || ^24.11.0 || >=26.0.0"
+    "node": "^22.19.0 || ^24.11.0 || >=26.0.0",
+    "npm": "10.9.2"
   }
 }

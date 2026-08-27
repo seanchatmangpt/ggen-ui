@@ -89,9 +89,8 @@ jobs:
           "$GGEN_BIN" sync run
           cmp "${RUNNER_TEMP}/component-catalog-a.ts" app/generated/component-catalog.ts
 
-          # ggen's own operational receipts are expected evidence, not source mutation.
-          # Preserve only non-secret receipt material. Ephemeral signing keys never leave
-          # the runner and are destroyed before the source-cleanliness court.
+          # ggen's operational receipts are expected evidence, not source mutation.
+          # Preserve only non-secret receipt material; destroy ephemeral signing keys.
           test -s .ggen-v2/receipt.json
           test -s .ggen-v2/receipt-log.jsonl
           cp .ggen-v2/receipt.json "${RUNNER_TEMP}/ggen-receipt.json"
@@ -112,13 +111,17 @@ jobs:
         with:
           node-version: '24.11.1'
 
-      - name: Resolve install graph
+      - name: Pin npm lock manufacturer
+        working-directory: ggen-ui
+        run: |
+          npm install --global npm@10.9.2
+          node --version | tee "${RUNNER_TEMP}/node-version.txt"
+          npm --version | tee "${RUNNER_TEMP}/npm-version.txt"
+          test "$(npm --version)" = "10.9.2"
+
+      - name: Resolve exact dependency lock
         working-directory: ggen-ui
         run: npm install --ignore-scripts
-
-      - name: Repair npm lock projection
-        working-directory: ggen-ui
-        run: npm install --package-lock-only --ignore-scripts
 
       - name: Install frozen resolved dependencies
         working-directory: ggen-ui
@@ -163,7 +166,9 @@ jobs:
           catalog_sha="$(awk '{print $1}' "${RUNNER_TEMP}/component-catalog.sha256")"
           ggen_receipt_sha="$(awk '{print $1}' "${RUNNER_TEMP}/ggen-receipt.sha256")"
           lock_sha="$(sha256sum package-lock.json | awk '{print $1}')"
-          python - "$UI_SHA" "$MARKETPLACE_SHA" "$catalog_sha" "$ggen_receipt_sha" "$lock_sha" > "${RUNNER_TEMP}/ggen-ui-verification.json" <<'PY'
+          node_version="$(cat "${RUNNER_TEMP}/node-version.txt")"
+          npm_version="$(cat "${RUNNER_TEMP}/npm-version.txt")"
+          python - "$UI_SHA" "$MARKETPLACE_SHA" "$catalog_sha" "$ggen_receipt_sha" "$lock_sha" "$node_version" "$npm_version" > "${RUNNER_TEMP}/ggen-ui-verification.json" <<'PY'
           import json, sys
           print(json.dumps({
             "schema": "https://ggen.io/schema/ui-verification-receipt/v1",
@@ -172,6 +177,8 @@ jobs:
             "generated_component_catalog_sha256": sys.argv[3],
             "ggen_receipt_sha256": sys.argv[4],
             "package_lock_sha256": sys.argv[5],
+            "node": sys.argv[6],
+            "npm": sys.argv[7],
             "executed": ["ggen-sync-run-x2", "npm-frozen-install", "nuxt-prepare", "typecheck", "production-build", "ssr-runtime-smoke"],
             "dependency_hooks": "REFUSED_BY_IGNORE_SCRIPTS",
             "live_brce_transport": False,
@@ -193,6 +200,8 @@ jobs:
             ${{ runner.temp }}/ggen-receipt.json
             ${{ runner.temp }}/ggen-receipt-log.jsonl
             ${{ runner.temp }}/ggen-receipt.sha256
+            ${{ runner.temp }}/node-version.txt
+            ${{ runner.temp }}/npm-version.txt
             ${{ runner.temp }}/preview.log
             ${{ runner.temp }}/index.html
             ${{ runner.temp }}/ggen-ui-verification.json
