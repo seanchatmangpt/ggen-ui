@@ -1,0 +1,48 @@
+@prefix dash: <https://ggen.io/ontology/dashboard#> .
+@prefix ui: <https://ggen.io/ontology/ggen-ui#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+
+ui:ggenUI
+  a prov:Entity ;
+  dct:title "ggen-ui" ;
+  dct:description "Proprietary semantic dashboard projection over the admitted ggen ecosystem graph." .
+
+ui:overview a dash:Projection ;
+  dash:projectionId "overview" ; dash:label "System overview" ;
+  dash:description "Cross-plane standing, authority boundaries, recent evidence, and receipts." ;
+  dash:route "/" ; dash:plane "SYSTEM" ; dash:icon "activity" .
+
+ui:resources a dash:Projection ;
+  dash:projectionId "resources" ; dash:label "Resources" ;
+  dash:description "Admitted resource subjects and their current bounded standing." ;
+  dash:route "/resources" ; dash:plane "SUBJECT" ; dash:icon "boxes" .
+
+ui:evidence a dash:Projection ;
+  dash:projectionId "evidence" ; dash:label "Evidence" ;
+  dash:description "Observed, admitted, executed, changed, verified, inferred, refused, blocked, and unsupported evidence." ;
+  dash:route "/evidence" ; dash:plane "EVIDENCE" ; dash:icon "shield-check" .
+
+ui:authority a dash:Projection ;
+  dash:projectionId "authority" ; dash:label "Authority" ;
+  dash:description "SELECT, CONSTRUCT, PREFLIGHT, BRCE, receipt, and replay authority calculus." ;
+  dash:route "/authority" ; dash:plane "AUTHORITY" ; dash:icon "key-round" .
+
+ui:receipts a dash:Projection ;
+  dash:projectionId "receipts" ; dash:label "Receipts" ;
+  dash:description "Digest-bound subject, authority, consequence, and standing receipts." ;
+  dash:route "/receipts" ; dash:plane "RECEIPT" ; dash:icon "fingerprint" .
+
+ui:replay a dash:Projection ;
+  dash:projectionId "replay" ; dash:label "Replay" ;
+  dash:description "Receipt DAG replay planning, equivalence witnesses, and bounded divergence." ;
+  dash:route "/replay" ; dash:plane "REPLAY" ; dash:icon "git-branch" .
+
+ui:topology a dash:Projection ;
+  dash:projectionId "topology" ; dash:label "Topology" ;
+  dash:description "Capability and correspondence topology; one failed edge never collapses the graph." ;
+  dash:route "/topology" ; dash:plane "GRAPH" ; dash:icon "network" .
+
+ui:manufacture a prov:Activity ;
+  prov:used ui:ggenUI, dash:DashboardContract ;
+  prov:generated ui:overview, ui:resources, ui:evidence, ui:authority, ui:receipts, ui:replay, ui:topology .

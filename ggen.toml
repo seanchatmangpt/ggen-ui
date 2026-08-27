@@ -1,0 +1,11 @@
+[project]
+name = "ggen-ui"
+
+[ontology]
+source = "ontology/ggen-ui.ttl"
+
+[packs]
+ggen-dashboard-pack = { path = "../ggen-marketplace/packs/ggen-dashboard-pack" }
+
+[templates]
+dir = "templates"
