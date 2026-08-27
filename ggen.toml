@@ -1,0 +1,10 @@
+[project]
+name = "ggen-ui"
+version = "26.8.27"
+description = "Ontology-driven visual composition workbench for the ggen ecosystem"
+
+[ontology]
+source = "ontology/ggen-ui.ttl"
+
+[templates]
+dir = "templates"
