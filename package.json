@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "start": "next start",
     "verify:source": "node scripts/verify-source.mjs",
     "typecheck": "tsc --noEmit",
     "build": "next build",
